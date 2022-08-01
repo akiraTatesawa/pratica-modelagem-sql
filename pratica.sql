@@ -1,102 +1,60 @@
-CREATE TABLE "public.users" (
-	"id" serial NOT NULL,
-	"name" TEXT NOT NULL,
-	"email" TEXT NOT NULL UNIQUE,
-	"password" TEXT NOT NULL,
-	"address" TEXT,
-	CONSTRAINT "users_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "users" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "address" TEXT
 );
 
-
-
-CREATE TABLE "public.products" (
-	"id" serial NOT NULL,
-	"name" TEXT NOT NULL,
-	"price" int NOT NULL,
-	"main_pic_id" int NOT NULL,
-	"type_id" int NOT NULL,
-	"subtype_id" int NOT NULL,
-	"size_id" int NOT NULL,
-	"stock" int NOT NULL,
-	CONSTRAINT "products_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "products_pics" (
+    "id" SERIAL PRIMARY KEY,
+    "url" TEXT NOT NULL,
+    "product_id" INTEGER NOT NULL
 );
 
-
-
-CREATE TABLE "public.products_pics" (
-	"id" serial NOT NULL,
-	"url" TEXT NOT NULL,
-	"product_id" int NOT NULL,
-	CONSTRAINT "products_pics_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "products_types" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL
 );
 
-
-
-CREATE TABLE "public.products_type" (
-	"id" serial NOT NULL,
-	"name" TEXT NOT NULL,
-	CONSTRAINT "products_type_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "products_subtype" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "product_type_id" INTEGER NOT NULL REFERENCES "products_types"(id)
 );
 
-
-
-CREATE TABLE "public.products_subtype" (
-	"id" serial NOT NULL,
-	"name" TEXT NOT NULL,
-	"product_type_id" int NOT NULL,
-	CONSTRAINT "products_subtype_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "sizes" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL
 );
 
-
-
-CREATE TABLE "public.sizes" (
-	"id" serial NOT NULL,
-	"name" TEXT NOT NULL,
-	CONSTRAINT "sizes_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "products" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "price" INTEGER NOT NULL,
+    "main_pic_id" INTEGER NOT NULL REFERENCES "products_pics"(id),
+    "type_id" INTEGER NOT NULL REFERENCES "products_types"(id),
+    "subtype_id" INTEGER NOT NULL REFERENCES "products_subtype"(id),
+    "size_id" INTEGER NOT NULL REFERENCES "sizes"(id),
+    "stock" INTEGER NOT NULL
 );
 
+CREATE TYPE SALE_STATUS AS ENUM ('created', 'paid', 'finished', 'canceled');
 
-
-CREATE TABLE "public.cart_items" (
-	"id" serial NOT NULL,
-	"product_id" int NOT NULL,
-	"user_id" int NOT NULL,
-	"quantity" int NOT NULL,
-	"status" TEXT NOT NULL,
-	"order_address" TEXT NOT NULL,
-	CONSTRAINT "cart_items_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
+CREATE TABLE "order_items" (
+    "id" SERIAL PRIMARY KEY,
+    "product_id" INTEGER NOT NULL REFERENCES "products"(id),
+    "user_id" INTEGER NOT NULL REFERENCES "users"(id),
+    "quantity" INTEGER NOT NULL,
+    "status" SALE_STATUS NOT NULL,
+    "order_address" TEXT NOT NULL,
+    "creation_date" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "finished_date" TIMESTAMP
 );
-
-
-
 
 ALTER TABLE "products" ADD CONSTRAINT "products_fk0" FOREIGN KEY ("main_pic_id") REFERENCES "products_pics"("id");
-ALTER TABLE "products" ADD CONSTRAINT "products_fk1" FOREIGN KEY ("type_id") REFERENCES "products_type"("id");
-ALTER TABLE "products" ADD CONSTRAINT "products_fk2" FOREIGN KEY ("subtype_id") REFERENCES "products_subtype"("id");
-ALTER TABLE "products" ADD CONSTRAINT "products_fk3" FOREIGN KEY ("size_id") REFERENCES "sizes"("id");
 
 ALTER TABLE "products_pics" ADD CONSTRAINT "products_pics_fk0" FOREIGN KEY ("product_id") REFERENCES "products"("id");
-
-
-ALTER TABLE "products_subtype" ADD CONSTRAINT "products_subtype_fk0" FOREIGN KEY ("product_type_id") REFERENCES "products_type"("id");
-
-
-ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_fk0" FOREIGN KEY ("product_id") REFERENCES "products"("id");
-ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_fk1" FOREIGN KEY ("user_id") REFERENCES "users"("id");
 
 
 
